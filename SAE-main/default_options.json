@@ -1,0 +1,16 @@
+{
+  "device": "cuda",
+  "path": "data/SMPL/MESH",
+  "model_type": "LearnedPooling",
+  "nb_freq": 200,
+  "size_latent": 16,
+  "size_conv": 3,
+  "activation_func": "ELU",
+  "loss_type": "MSE",
+  "learning_rate": 1e-4,
+  "train_batch_size": 16,
+  "test_batch_size": 64,
+  "num_workers": 4,
+  "num_iterations": 5000,
+  "check_val_every_n_epoch": 10
+}

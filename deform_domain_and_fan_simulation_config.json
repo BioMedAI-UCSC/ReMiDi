@@ -1,0 +1,20 @@
+{
+    "device" : "cuda:0",
+    "base_folder_path": "/media/DATA_18_TB_1/shri_updated_codes/SAE-main",
+    "main_mesh_file" : "setup_mesh/less_points_cylinders/high_res_cylinder_no_in_ecs_9x3_dir/high_res_cylinder_no_in_ecs_9x3_no_ecs0.5_refinement1_mesh.1",
+    "checkpoint_base_path" : "SAE_ckpts/checkpoints",
+    "checkpoint_name" : "fandefbead_sep_noscale_2",
+    "path_evecs" : "mesh_evecs/mesh.evecs_315",
+    "num_fequencies" : 300,
+    "fan_bend_point" : 0.25,
+    "fan_bend_angle" : 45,
+    "fan_bend_axis" : 2,
+    "experiment_name" : "opt_plots_ex_28_01_cyl_4seq_21amp_55dir_0_25_lr_loss_test_bp0_25_ban45_bax2_sx0_5_sy0_5_sz0_5_htrack_1",
+    "base_lr" : 0.25,
+    "min_lr" : 0.01,
+    "max_iters" : 100,
+    "gradient_clip_value" : 1000,
+    "inv_volume" : 0,
+    "gradient_norm" : 1,
+    "log_directory" : "opt_plots_ex_28_01_cyl_4seq_21amp_55dir_0_25_lr_loss_test_bp0_25_ban45_bax2_sx0_5_sy0_5_sz0_5_htrack_logs"
+}
