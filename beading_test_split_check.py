@@ -14,6 +14,7 @@ from sklearn.decomposition import PCA
 import cv2 as cv2
 from natsort import natsorted
 from matplotlib.backends.backend_agg import FigureCanvasAgg
+import roma
 
 sys.path.append('SAE-main')
 
@@ -40,10 +41,10 @@ from setup_mesh.prepare_experiments import prepare_experiments
 from plot.plot_femesh_plotly_2 import plot_femesh_plotly_2
 from plot.plot_point_cloud_plotly import plot_point_cloud_plotly
 from src.get_volume_mesh import get_volume_mesh
-from src.fan_single_cylinder import fan_single_cylinder
-
-#Importing scaling
 from src.ellipsoidal_scale_mesh import ellipsoidal_scale_mesh
+from src.deform_domain_periodic_beading import deform_domain_periodic_beading
+from src.rotate_point_cloud import rotate_point_cloud
+from src.get_rotations import get_rotations
 
 def load_config(config_path):
     with open(config_path, 'r') as config_file:
@@ -57,7 +58,7 @@ def main(config):
 
     gc.collect()
     tch.cuda.empty_cache()
-    tch.device(config['device'])
+    tch.cuda.set_device(config['device'])
     
     # sys.path.append(config['base_folder_path'])
     
@@ -119,13 +120,22 @@ def main(config):
     # Deform mesh to deviate for reference
     # femesh_all_2['points'] = deform_domain(femesh_all_2['points'], tch.tensor([config['deformation_bend'], config['deformation_twist']]))
     # femesh_all_2 = ellipsoidal_scale_mesh(femesh_all_2, tch.tensor([1, 1, 5]))
-    femesh_all_2['points'] = fan_single_cylinder(femesh_all_2['points'], bend_point=config['fan_bend_point'], bend_angle=config['fan_bend_angle'], axis=config['fan_bend_axis'])
+    # femesh_all_2['points'] = fan_single_cylinder(femesh_all_2['points'], bend_point=config['fan_bend_point'], bend_angle=config['fan_bend_angle'], axis=config['fan_bend_axis'])
+    # femesh_all_2['points'] = deform_domain_periodic_beading(femesh_all_2['points'], amplitude=config['beading_amplitude'], num_periods=config['beading_num_periods'])
+    
+    # Loading testing mesh points
+    femesh_all_2['points'] = tch.load(config['reference_mesh_points'], weights_only=True).T.to(config['device'])
     
     # Adding scaling to the mesh to make more examples
-    scaled_mesh = ellipsoidal_scale_mesh(femesh_all_2, tch.tensor([config['scale_x'], config['scale_y'], config['scale_z']]))
+    # scaled_mesh = ellipsoidal_scale_mesh(femesh_all_2, tch.tensor([config['scale_x'], config['scale_y'], config['scale_z']]))
+
+    rotation_matrices = get_rotations()
+
+    # Rotating mesh for reference
+    rotated_mesh = rotate_point_cloud(femesh_all_2, rotation_matrices, config['rotation_inx'])
 
     # Run a forward pass to get the reference signal
-    femesh_all_2_split = split_mesh(scaled_mesh)
+    femesh_all_2_split = split_mesh(rotated_mesh)
     # plot_femesh(femesh_all_2_split)
     
     neig_max = setup.mf['neig_max']
@@ -139,24 +149,24 @@ def main(config):
     
     # Save the reference signal into a temp location for reconstruction
     mf_signal_orig = mf_signal
-    # mf_signal_orig['signal_allcmpts'] = (tch.abs(mf_signal_orig['signal_allcmpts']) / tch.abs(mf_signal['signal_allcmpts'][..., 0, 0, 0])) * 100
+    # mf_signal_orig['signal_allcmpts'] = (tch.abs(mf_signal_orig['signal_allcmpts']) / tch.abs(mf_signal['signal_allcmpts'][0, :, 0].view(1, -1, 1))) * 100
 
-    min_value = 1e-6
-    # Using view to keep the signal shape consistent
-    # mf_signal_orig['signal_allcmpts'] = (tch.abs(mf_signal_orig['signal_allcmpts']) / tch.abs(mf_signal['signal_allcmpts'][0, :, 0].view(1, -1, 1).clamp(min=min_value))) * 100
+    # Using epsilon with clamping to prevent divide by zero
+    min_value = 1e-6  # Minimum allowed value for the denominator
+
     mf_signal_orig['signal_allcmpts'] = (tch.abs(mf_signal_orig['signal_allcmpts']) / tch.abs(mf_signal['signal_allcmpts'][0, :, 0].view(1, -1, 1)).clamp(min=min_value)) * 100
     
     # Save reference mesh and point cloud for diagnostic and result plots
     # 3D Mesh
-    plot_femesh_plotly_2(femesh_all_2, setup.pde['compartments'], 0, f"reference_cylinder_bp{config['fan_bend_point']}_ban{config['fan_bend_angle']}_bax{config['fan_bend_axis']}_sx{config['scale_x']}_sy{config['scale_y']}_sz{config['scale_z']}_h".replace('.', '_'), f"reference_cylinder_bp{config['fan_bend_point']}_ban{config['fan_bend_angle']}_bax{config['fan_bend_axis']}_sx{config['scale_x']}_sy{config['scale_y']}_sz{config['scale_z']}_p".replace('.', '_'))
+    plot_femesh_plotly_2(rotated_mesh, setup.pde['compartments'], 0, f"reference_cylinder_{config['image_file_name']}_r{config['rotation_inx']}_h".replace('.', '_'), f"reference_cylinder_{config['image_file_name']}_r{config['rotation_inx']}_p".replace('.', '_'))
     # Point cloud
-    plot_point_cloud_plotly(femesh_all_2['points'], 0, f"reference_cylinder_bp{config['fan_bend_point']}_ban{config['fan_bend_angle']}_bax{config['fan_bend_axis']}_sx{config['scale_x']}_sy{config['scale_y']}_sz{config['scale_z']}_pc_h".replace('.', '_'), f"reference_cylinder_bp{config['fan_bend_point']}_ban{config['fan_bend_angle']}_bax{config['fan_bend_axis']}_sx{config['scale_x']}_sy{config['scale_y']}_sz{config['scale_z']}_pc_p".replace('.', '_'))
+    plot_point_cloud_plotly(rotated_mesh['points'], 0, f"reference_cylinder_{config['image_file_name']}_r{config['rotation_inx']}_pc_h".replace('.', '_'), f"reference_cylinder_{config['image_file_name']}_r{config['rotation_inx']}_pc_p".replace('.', '_'))
     
     # Create logging directory
     ops.makedirs(config['log_directory'], exist_ok=True)
     
     # Saving complete reference mesh file
-    tch.save(femesh_all_2, f"{config['log_directory']}/reference_cylinder_bp{config['fan_bend_point']}_ban{config['fan_bend_angle']}_bax{config['fan_bend_axis']}_sx{config['scale_x']}_sy{config['scale_y']}_sz{config['scale_z']}_mesh.pth".replace('.', '_'))
+    tch.save(rotated_mesh, f"{config['log_directory']}/reference_cylinder_{config['image_file_name']}_r{config['rotation_inx']}_mesh.pth".replace('.', '_'))
     
     # filename = "1low_res_sphere2_dir/1low_res_sphere2_no_ecs0.5_refinement8_mesh.1"
     filename = config['main_mesh_file']
@@ -209,8 +219,8 @@ def main(config):
     previous_mesh_points = original_mesh_points.clone()
     
     # reference_mesh_points = deform_domain(femesh_all_2['points'].clone().detach(), tch.tensor([config['deformation_bend'], config['deformation_twist']])) 
-    # reference_mesh_points =  fan_single_cylinder(femesh_all_2['points'], bend_point=config['fan_bend_point'], bend_angle=config['fan_bend_angle'], axis=config['fan_bend_axis'])
-    reference_mesh_points = scaled_mesh['points'].clone().detach()
+    # reference_mesh_points =  deform_domain_periodic_beading(femesh_all_2['points'].clone().detach(), amplitude=config['beading_amplitude'], num_periods=config['beading_num_periods'])
+    reference_mesh_points = rotated_mesh['points'].clone().detach()
 
     # Initialize lists to store values
     volumes_history = []
@@ -298,10 +308,13 @@ def main(config):
         spatial = tch.einsum('ij, ijk->ik', opt['evecs'], spectral)
         
         femesh_all_2['points'] = tch.einsum('ij->ji', spatial.squeeze(0))
+
+        # Rotate the initial mesh
+        femesh_all_2_r = rotate_point_cloud(femesh_all_2, rotation_matrices, config['rotation_inx'])
     
         # Calculate RMSD from original mesh
         # Using detached points for this task
-        current_mesh_points = femesh_all_2['points'].detach()
+        current_mesh_points = femesh_all_2_r['points'].clone().detach()
         
         # Save the updated mesh before staring forward pass of the simulator
         all_meshes_generated.append(current_mesh_points)
@@ -311,7 +324,7 @@ def main(config):
         rmsd_ref = tch.sqrt(tch.mean((current_mesh_points - reference_mesh_points) ** 2))
         rmsd_from_original.append(rmsd_orig.item())
         rmsd_from_reference.append(rmsd_ref.item())
-        meshes_overtime.append(current_mesh_points)
+        meshes_overtime.append(femesh_all_2_r['points'].clone().detach())
         
         # Calculate RMSD from previous iteration's mesh
         if iter > 0:
@@ -322,7 +335,7 @@ def main(config):
         previous_mesh_points = current_mesh_points.clone()
         
         print('Started forward simulation')
-        femesh_all_2_split = split_mesh(femesh_all_2)
+        femesh_all_2_split = split_mesh(femesh_all_2_r)
     
         # if iter % 10 == 0 or iter == 499:
         #     plot_femesh(femesh_all_2_split)
@@ -356,22 +369,42 @@ def main(config):
         mf_signal = solve_mf(femesh_all_2_split, setup, lap_eig)
         
         if iter % 10 == 0 or iter == config['max_iters'] - 1:
-            plot_femesh_plotly_2(femesh_all_2, setup.pde['compartments'], iter, f"{config['experiment_name']}_h", f"{config['experiment_name']}_p", which='p')
-            plot_point_cloud_plotly(femesh_all_2['points'], iter, f"{config['experiment_name']}_pc_h", f"{config['experiment_name']}_pc_p", which='p')
+            plot_femesh_plotly_2(femesh_all_2_r, setup.pde['compartments'], iter, f"{config['experiment_name']}_h", f"{config['experiment_name']}_p", which='p')
+            plot_point_cloud_plotly(femesh_all_2_r['points'], iter, f"{config['experiment_name']}_pc_h", f"{config['experiment_name']}_pc_p", which='p')
         
-            plot_femesh_plotly_2(femesh_all_2, setup.pde['compartments'], iter, f"{config['experiment_name']}_h", f"{config['experiment_name']}_p", which='h')
-            plot_point_cloud_plotly(femesh_all_2['points'], iter, f"{config['experiment_name']}_pc_h", f"{config['experiment_name']}_pc_p", which='h')
+            plot_femesh_plotly_2(femesh_all_2_r, setup.pde['compartments'], iter, f"{config['experiment_name']}_h", f"{config['experiment_name']}_p", which='h')
+            plot_point_cloud_plotly(femesh_all_2_r['points'], iter, f"{config['experiment_name']}_pc_h", f"{config['experiment_name']}_pc_p", which='h')
          
         # loss based on difference    
         # dif1 = tch.abs(tch.abs(mf_signal['signal_allcmpts']) - tch.abs(mf_signal_orig['signal_allcmpts']))
-        node = tch.abs(tch.abs(tch.abs(mf_signal['signal_allcmpts']) / tch.abs(mf_signal['signal_allcmpts'][0, :, 0].view(1, -1, 1).clamp(min=min_value))) * 100)
-        if tch.isnan(node).sum().item() > 0:
-            print("Loss or signal has error")
-            import pdb; pdb.set_trace()
-
+        
         # Normalized signal difference
+        # dif1 = tch.abs((tch.abs(mf_signal_orig['signal_allcmpts']) / tch.abs(mf_signal['signal_allcmpts'][0, :, 0].view(1, -1, 1))) * 100 - tch.abs(mf_signal_orig['signal_allcmpts']))
+        # Using clamping here also to prevent divide by zero
+        node = tch.abs(tch.abs(tch.abs(mf_signal['signal_allcmpts']) / tch.abs(mf_signal['signal_allcmpts'][0, :, 0]).view(1, -1, 1).clamp(min=min_value))) * 100
+
         dif1 = node - (tch.abs(mf_signal_orig['signal_allcmpts']))
+        # Compute dif1 with the clamped denominator
+        # dif1 = tch.abs(
+        #     (tch.abs(mf_signal_orig['signal_allcmpts']) / tch.abs(mf_signal['signal_allcmpts'][0, :, 0].view(1, -1, 1)).clamp(min=min_value)) * 100
+        #     - tch.abs(mf_signal_orig['signal_allcmpts'])
+        # )
         dif2 = tch.sum(1 / tet_volumes)
+        # print(tch.allclose(mf_signal['signal_allcmpts'], mf_signal_orig['signal_allcmpts'], rtol=1e-6, atol=1e-8))
+        # if tch.allclose(mf_signal['signal_allcmpts'], mf_signal_orig['signal_allcmpts'], rtol=1e-5, atol=1e-7):
+        #     print("all close")
+        #     break
+
+        # Momentum regularization term
+        if update_mask.grad is not None:
+            grad_norm = update_mask.grad.norm()  
+            if grad_norm <= 1e-3:
+                momentum_term = ((grad_norm - config['momentum']) ** 2)  
+            else:
+                momentum_term = 0
+        else:
+            momentum_term = 0
+        
         # print(tch.allclose(mf_signal['signal_allcmpts'], mf_signal_orig['signal_allcmpts'], rtol=1e-6, atol=1e-8))
         # if tch.allclose(mf_signal['signal_allcmpts'], mf_signal_orig['signal_allcmpts'], rtol=1e-5, atol=1e-7):
         #     print("all close")
@@ -379,6 +412,8 @@ def main(config):
     
         if config['inv_volume']:
             loss = tch.mean(dif1 ** 2) + dif2
+        elif config['momentum'] > 0:
+            loss = (config['loss_multiplier'] * tch.mean(dif1 ** 2)) + momentum_term
         else:
             loss = tch.mean(dif1 ** 2)
         loss_overtime.append(loss.item())
@@ -416,15 +451,7 @@ def main(config):
     
     if not optimization_success:
         full_range = iter
-
-    if tch.isnan(meshes_overtime).sum().item() > 0:
-        print("meshes have error")
-        import pdb; pdb.set_trace()
-
-    if tch.isnan(loss_overtime).sum().item() > 0:
-        print("Loss or signal has error")
-        import pdb; pdb.set_trace()
-
+        
     tch.save(gradient_norms[:full_range], f"{config['log_directory']}/gradient_norms_overtime.pth")
     tch.save(param_update_norms[:full_range], f"{config['log_directory']}/param_update_norms_overtime.pth")
     tch.save(rmsd_from_reference[:full_range], f"{config['log_directory']}/rmsd_from_reference_overtime.pth")
@@ -436,6 +463,7 @@ def main(config):
     tch.save(loss_overtime[:full_range], f"{config['log_directory']}/loss_overtime.pth")
     tch.save(volumes_history[:full_range], f"{config['log_directory']}/volumes_history.pth")
     tch.save(meshes_overtime[:full_range], f"{config['log_directory']}/meshes_history.pth")
+    tch.save(all_meshes_generated[:full_range], f"{config['log_directory']}/all_meshes_generated.pth")
     
     iterations = [i for i in range(0, full_range)]
     iterations_np = np.array(iterations[:full_range])
@@ -692,8 +720,8 @@ def main(config):
     # Example usage:
     create_video_from_two_folders(f"{config['experiment_name']}_p", 
                                     f"{config['experiment_name']}_pc_p", 
-                                    f"reference_cylinder_bp{config['fan_bend_point']}_ban{config['fan_bend_angle']}_bax{config['fan_bend_axis']}_sx{config['scale_x']}_sy{config['scale_y']}_sz{config['scale_z']}_p".replace('.', '_') + "/femesh_plot_iter_0.png", 
-                                    f"reference_cylinder_bp{config['fan_bend_point']}_ban{config['fan_bend_angle']}_bax{config['fan_bend_axis']}_sx{config['scale_x']}_sy{config['scale_y']}_sz{config['scale_z']}_pc_p".replace('.', '_') + "/femesh_plot_iter_0.png", 
+                                    f"reference_cylinder_{config['image_file_name']}_r{config['rotation_inx']}_p".replace('.', '_') + "/femesh_plot_iter_0.png", 
+                                    f"reference_cylinder_{config['image_file_name']}_r{config['rotation_inx']}_pc_p".replace('.', '_') + "/femesh_plot_iter_0.png", 
                                     f"{config['experiment_name']}_video.mp4")
     
 if __name__ == "__main__":

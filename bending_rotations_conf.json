@@ -1,0 +1,22 @@
+{
+    "device": "cuda:0",
+    "base_folder_path": "/media/DATA_18_TB_1/shri_updated_codes/SAE-main",
+    "main_mesh_file": "setup_mesh/less_points_cylinders/high_res_cylinder_no_in_ecs_9x3_dir/high_res_cylinder_no_in_ecs_9x3_no_ecs0.5_refinement1_mesh.1",
+    "checkpoint_base_path": "SAE_ckpts/checkpoints",
+    "checkpoint_name": "lr-4_300_once",
+    "path_evecs": "mesh_evecs/mesh.evecs_315",
+    "num_fequencies": 300,
+    "deformation_bend": 0.4,
+    "deformation_twist": 0.2,
+    "experiment_name": "opt_plots_ex_707_11_cyl_4seq_21amp_30dir_0_25_lr_loss_test_p0_2_p0_4_sx0_5_sy0_5_sz0_5_htrack_1",
+    "base_lr": 0.25,
+    "min_lr": 0.01,
+    "max_iters": 1000,
+    "gradient_clip_value": 1000,
+    "inv_volume": 0,
+    "gradient_norm": 1,
+    "momentum" : 0.5,
+    "loss_multiplier" : 250,
+    "rotation_inx" : 1,
+    "log_directory": "opt_plots_ex_707_11_cyl_4seq_21amp_30dir_0_25_lr_loss_test_p0_2_p0_4_sx0_5_sy0_5_sz0_5_htrack_logs_1"
+}

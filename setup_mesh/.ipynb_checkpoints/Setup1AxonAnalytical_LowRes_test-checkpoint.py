@@ -1,3 +1,4 @@
+
 import torch
 # from torchdiffeq import odeint
 from setup_mesh.directions import directions
@@ -45,20 +46,18 @@ class Setup1AxonAnalytical_LowRes:
         }
 
         # Gradient sequences
+        
         self.gradient = {
-            "values": torch.arange(
-                0, 10001, 500
-            ),  # torch.arange(0, 10.1, 0.5) / torch.arange(0, 10001, 500), torch.arange(0, 20001, 1000)
+            "values": torch.arange(0, 10001, 500),
             "values_type": "b",
             "sequences": [
-                PGSE(5000, 10000),
-                PGSE(5000, 25000),
-                PGSE(5000, 50000)
-                # PGSE(10000, 100000)
-            ],  # "sequences": [PGSE(5, 10), PGSE(10, 100)], in ms PGSE(10000, 100000)
-            "directions": directions("setup_mesh/PointSets/Elec030.txt"),
-            # "directions": torch.tensor([[1, 0, 0], [0, 1, 0], [-1, 0, 0], [0, -1, 0]], dtype=torch.float).T # torch.tensor([[1, 0, 0], [-0.5000, 0.8660, 0], [-0.5000, -0.8660, 0]])
+                PGSE(15000, 25000),
+                PGSE(30000, 50000),
+                PGSE(10000, 100000)
+            ],
+            "directions": directions("setup_mesh/PointSets/Elec040.txt")
         }
+        
 
         # BTPDE experiment parameters
         self.btpde = {"reltol": 1e-4, "abstol": 1e-6}
