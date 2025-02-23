@@ -1,21 +1,18 @@
 # ReMiDi - Reconstruction of Microstructure using Diffusion Magnetic Resonance Imaging
 
-ReMiDi is a framework for reconstructing complex microstructural geometries using diffusion MRI data, by use a differentiable diffusion MRI simulator to iteratively update the mesh.
+ReMiDi is a framework for reconstructing complex microstructural geometries from a diffusion MRI (dMRI) signal, by using a differentiable dMRI simulator to iteratively update the mesh.
 
-For more details about the method and its implementation, please refer to our paper:
-[Reconstruction of Microstructure using Diffusion Magnetic Resonance Imaging](https://arxiv.org/abs/2502.01988)
-
-## Overview
+Please refer to our [arxiv](https://arxiv.org/abs/2502.01988) for more details.
 
 ![Reconstruction Process](images/Reconstruction_example.png)
 
-Overview of iterative reconstruction of a bent axon by ReMiDi at different gradient descent iterations. The ground-truth mesh is shown to the left. Top row: Evolution of the triangulated mesh surface. Bottom row: Corresponding point cloud representations of mesh vertices.  The color scale shows Chamfer distance (lower values are better).
+Here is an overview of iterative reconstruction of a bent axon by ReMiDi at different gradient descent iterations. The ground-truth mesh is shown to the left. Top row: Evolution of the triangulated mesh surface. Bottom row: Corresponding point cloud representations of mesh vertices.  The color scale shows Chamfer distance (lower values are better).
 
 ## Method
 
 ![Reconstruction Process](images/ReMiDi_pipeline.png)
 
-Overview of the ReMiDi-based dMRI reconstruction pipeline. A 3D mesh decoded by a Spectral Auto-Encoder (SAE) is given as input to the differentiable dMRI simulator. The final loss function between the simulated dMRI signal and a reference signal is backpropagated to the latent of the SAE, and the mesh is iteratively updated with gradient-based learning.
+Above is the ReMiDi-based dMRI reconstruction pipeline. A 3D mesh decoded by a Spectral Auto-Encoder (SAE) is given as input to the differentiable dMRI simulator. The final loss function between the simulated dMRI signal and a reference signal is backpropagated to the latent of the SAE, and the mesh is iteratively updated with gradient-based learning.
 
 ## Running Experiments
 
@@ -32,16 +29,19 @@ docker pull prattk/remidi:v1.0.1
 ### Reconstruction Examples
 
 1. Bending Reconstruction:
+
 ```bash
 python3 bending_reconstruction.py config/bending_reconstruction_conf.json
 ```
 
 2. Beading Reconstruction:
+
 ```bash
 python3 beading_reconstruction.py config/beading_reconstruction_conf.json
 ```
 
 3. Fanning Reconstruction:
+
 ```bash
 python3 fanning_reconstruction.py config/fanning_reconstruction_conf.json
 ```
@@ -49,6 +49,7 @@ python3 fanning_reconstruction.py config/fanning_reconstruction_conf.json
 ## Output
 
 The reconstruction process generates:
+
 - Intermediate mesh files in `.html` format for visualization
 - Image files showing the reconstruction progress
 - Video files for the entire reconstruction process will also be generated and saved in the same folder.
