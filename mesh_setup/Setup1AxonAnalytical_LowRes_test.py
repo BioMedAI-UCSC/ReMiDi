@@ -1,8 +1,8 @@
 
 import torch
 # from torchdiffeq import odeint
-from setup_mesh.directions import directions
-from setup_mesh.PGSE import PGSE
+from mesh_setup.directions import directions
+from mesh_setup.PGSE import PGSE
 
 
 class Setup1AxonAnalytical_LowRes:
@@ -55,7 +55,7 @@ class Setup1AxonAnalytical_LowRes:
                 PGSE(30000, 50000),
                 PGSE(10000, 100000)
             ],
-            "directions": directions("setup_mesh/PointSets/Elec040.txt")
+            "directions": directions("mesh_setup/PointSets/Elec040.txt")
         }
         
 

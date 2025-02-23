@@ -36,10 +36,10 @@ from src.eig2length import eig2length
 from src.solve_mf import solve_mf
 from src.compute_free_diffusion import compute_free_diffusion
 from plot.plot_femesh import plot_femesh
-from setup_mesh import Setup1AxonAnalytical_LowRes as Setup1AxonAnalytical_LowRes
-from setup_mesh.update_pde import update_pde
-from setup_mesh.prepare_pde import prepare_pde
-from setup_mesh.prepare_experiments import prepare_experiments
+from mesh_setup import Setup1AxonAnalytical_LowRes as Setup1AxonAnalytical_LowRes
+from mesh_setup.update_pde import update_pde
+from mesh_setup.prepare_pde import prepare_pde
+from mesh_setup.prepare_experiments import prepare_experiments
 from plot.plot_femesh_plotly_2 import plot_femesh_plotly_2
 from plot.plot_point_cloud_plotly import plot_point_cloud_plotly
 from src.get_volume_mesh import get_volume_mesh

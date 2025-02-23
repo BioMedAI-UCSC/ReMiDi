@@ -1,7 +1,7 @@
 import torch
 # from torchdiffeq import odeint
-from setup_mesh.directions import directions
-from setup_mesh.PGSE import PGSE
+from mesh_setup.directions import directions
+from mesh_setup.PGSE import PGSE
 
 
 class Setup1AxonAnalytical_LowRes:
@@ -56,7 +56,7 @@ class Setup1AxonAnalytical_LowRes:
                 PGSE(30000, 50000),
                 PGSE(10000, 100000)
             ],  # "sequences": [PGSE(5, 10), PGSE(10, 100)], in ms PGSE(10000, 100000)
-            "directions": directions("setup_mesh/PointSets/Elec055.txt"),
+            "directions": directions("mesh_setup/PointSets/Elec055.txt"),
             # "directions": torch.tensor([[1, 0, 0], [0, 1, 0], [-1, 0, 0], [0, -1, 0]], dtype=torch.float).T # torch.tensor([[1, 0, 0], [-0.5000, 0.8660, 0], [-0.5000, -0.8660, 0]])
         }
 

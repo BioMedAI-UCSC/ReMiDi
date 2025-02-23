@@ -1,4 +1,4 @@
-from setup_mesh.prepare_pde import prepare_pde
+from mesh_setup.prepare_pde import prepare_pde
 
 
 def update_pde(setup):

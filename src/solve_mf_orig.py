@@ -1,6 +1,6 @@
 import time
 import torch
-from setup_mesh.PGSE import PGSE
+from mesh_setup.PGSE import PGSE
 from src.sparse_block_diagonal import sparse_block_diagonal
 from src.get_volume_mesh import get_volume_mesh
 from src.mass_matrixP1_3D import mass_matrixP1_3D
