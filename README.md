@@ -1,8 +1,8 @@
 # ReMiDi - Reconstruction of Microstructure using Diffusion Magnetic Resonance Imaging
 
-ReMiDi is a framework for reconstructing complex microstructural geometries using diffusion MRI data.
+## Overview
 
-## Paper
+ReMiDi is a framework for reconstructing complex microstructural geometries using diffusion MRI data, by use a differentiable diffusion MRI simulator to iteratively update the mesh.
 
 For more details about the method and its implementation, please refer to our paper:
 [Reconstruction of Microstructure using Diffusion Magnetic Resonance Imaging](https://arxiv.org/abs/2502.01988)
@@ -11,7 +11,11 @@ For more details about the method and its implementation, please refer to our pa
 
 ![Reconstruction Process](images/Reconstruction_example.png)
 
+Overview of the ReMiDi-based dMRI reconstruction pipeline. A 3D mesh decoded by a Spectral Auto-Encoder (SAE) is given as input to the differentiable dMRI simulator. The final loss function between the simulated dMRI signal and a reference signal is backpropagated to the latent of the SAE, and the mesh is iteratively updated with gradient-based learning.
+
 ![Reconstruction Process](images/ReMiDi_pipeline.png)
+
+Overview of iterative reconstruction of a bent axon by ReMiDi at different gradient descent iterations. The ground-truth mesh is shown to the left. Top row: Evolution of the triangulated mesh surface. Bottom row: Corresponding point cloud representations of mesh vertices.  The color scale shows Chamfer distance (lower values are better).
 
 ## Running Experiments
 
@@ -50,6 +54,10 @@ The reconstruction process generates:
 - Video files for the entire reconstruction process will also be generated and saved in the same folder.
 
 These outputs are automatically saved in the output directory specified in the configuration files.
+
+## TL;DR
+
+ReMiDi provides a method to infer neuronal microstructure from dMRI signal using a differentiable dMRI simulator.
 
 ## Citation
 
