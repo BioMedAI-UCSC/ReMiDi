@@ -54,11 +54,7 @@ The reconstruction process generates:
 - Image files showing the reconstruction progress
 - Video files for the entire reconstruction process will also be generated and saved in the same folder.
 
-These outputs are automatically saved in the output directory specified in the configuration files.
-
-## TL;DR
-
-ReMiDi provides a method to infer neuronal microstructure from dMRI signal using a differentiable dMRI simulator.
+These outputs are automatically saved in the output directory specified in the configuration files.  
 
 ## Citation
 
