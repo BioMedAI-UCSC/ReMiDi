@@ -1,0 +1,17 @@
+{
+    "activation_func": "ELU",
+    "check_val_every_n_epoch": 10,
+    "device": "cuda",
+    "job_id": "bending_finally_1",
+    "learning_rate": 0.0001,
+    "loss_type": "MSE",
+    "model_type": "LearnedPooling",
+    "nb_freq": 300,
+    "num_iterations": 10000,
+    "num_workers": 4,
+    "path": "data/SMPL/MESH",
+    "size_conv": 3,
+    "size_latent": 16,
+    "test_batch_size": 64,
+    "train_batch_size": 16
+}
