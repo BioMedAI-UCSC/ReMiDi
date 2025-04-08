@@ -16,7 +16,12 @@ def evaluate_area(elements, coordinates):
     matrix_3D[:, 1, 0] = matrix_3D[:, 0, 1]
     matrix_3D[:, 1, 1] = torch.sum(v2 * v2, dim=1)
 
+    # Using clamp to prevent NaN and possible crash of FEM pipeline due to Hermitian error
     # Calculate the determinant of each 2x2 matrix and then compute the area
-    elements2area = torch.sqrt(torch.det(matrix_3D)) / 2
+    eps = 1e-12
+    elements2area = 0.5 * torch.sqrt(torch.clamp(torch.det(matrix_3D), min=eps))
+
+    # Calculate the determinant of each 2x2 matrix and then compute the area
+    # elements2area = torch.sqrt(torch.det(matrix_3D)) / 2
 
     return elements2area
